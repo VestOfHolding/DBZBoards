@@ -5,7 +5,6 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -45,14 +44,5 @@ public class Population {
     public Individual getBestOfGeneration() {
         population.sort(Comparator.comparing(Individual::getScore).reversed());
         return population.get(0);
-    }
-
-    public Individual tournamentSelect(int tournamentSize) {
-        Population tempPopulation = new Population(size);
-        Random random = new Random();
-        for (int i = 0; i < tournamentSize; ++i) {
-            tempPopulation.addIndividual(population.get(random.nextInt(size)));
-        }
-        return tempPopulation.getBestOfGeneration();
     }
 }
