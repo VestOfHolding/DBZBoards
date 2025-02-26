@@ -1,17 +1,16 @@
 package dbz.board;
 
-import dbz.LinkBonus;
 import dbz.LinkBonusFactory;
 import dbz.board.layout.DBZEdge;
 import dbz.board.layout.EmblemSpace;
 import dbz.domain.BoardName;
 import dbz.domain.Emblem;
-import org.apache.commons.collections4.CollectionUtils;
-import org.jgrapht.graph.AsSubgraph;
+import lombok.Getter;
 import org.jgrapht.graph.DefaultUndirectedGraph;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -19,22 +18,18 @@ import java.util.stream.Collectors;
 
 public class CommunityBoard extends DefaultUndirectedGraph<EmblemSpace, DBZEdge> {
 
-    private Map<Integer, EmblemSpace> vertexMap;
+    private final Map<Integer, EmblemSpace> vertexMap;
 
-    private BoardName boardName;
+    @Getter
+    private final BoardName boardName;
 
-    private Set<LinkBonus> activeLinkBonuses;
-
-    private LinkBonusFactory linkBonusFactory;
-
-    private int score;
+    @Getter
+    private final LinkBonusFactory linkBonusFactory;
 
     public CommunityBoard(BoardName boardName) {
         super(DBZEdge.class);
         vertexMap = new HashMap<>();
-        score = 0;
         this.boardName = boardName;
-        activeLinkBonuses = new HashSet<>();
         linkBonusFactory = new LinkBonusFactory();
     }
 
@@ -48,52 +43,31 @@ public class CommunityBoard extends DefaultUndirectedGraph<EmblemSpace, DBZEdge>
         return super.addVertex(v);
     }
 
-    public boolean setEmblemInSpace(Emblem emblem, int spaceId) {
+    public void setEmblemInSpace(Emblem emblem, int spaceId) {
         if (spaceId >= getBoardSize()) {
-            return false;
+            return;
         }
 
         EmblemSpace space = vertexMap.get(spaceId);
 
         if (space.getEmblem() != null) {
-            return false;
-        }
-
-        space.setEmblem(emblem);
-        return true;
-    }
-
-    public void populateActiveLinkBonuses() {
-        Set<LinkBonus> potentialBonuses = linkBonusFactory.linksContainingAllEmblems(getEmblemsOnBoard());
-
-        if (CollectionUtils.isEmpty(potentialBonuses)) {
             return;
         }
 
-        for (LinkBonus linkBonus : potentialBonuses) {
-            AsSubgraph<EmblemSpace, DBZEdge> linkSubgraph = new AsSubgraph<>(this, getVerticesByEmblems(linkBonus.getLinkMembers()));
+        space.setEmblem(emblem);
+        updateEdgeStates(emblem, spaceId);
+    }
 
-            linkSubgraph.vertexSet().stream()
-                    .filter(space -> CollectionUtils.isNotEmpty(linkSubgraph.edgesOf(space)))
-                    .forEach(space -> activeLinkBonuses.add(linkBonus));
+    private void updateEdgeStates(Emblem emblem, int spaceId) {
+        for (DBZEdge edge : edgeSet()) {
+            if (getEdgeSource(edge).getSpaceId() == spaceId) {
+                edge.updateSourceEmblem(emblem);
+            }
+            else if (getEdgeTarget(edge).getSpaceId() == spaceId) {
+                edge.updateTargetEmblem(emblem);
+            }
         }
     }
-
-    public void calculateScore() {
-        score = 0;
-        getEmblemsOnBoard().forEach(e -> score += e.getBonusForBoard(boardName));
-        activeLinkBonuses.forEach(link -> score += (link.getBonus() * link.getLinkMembers().size()));
-    }
-
-//    @Override
-//    public boolean removeVertex(EmblemSpace v) {
-//        if (v == null || !vertexMap.containsKey(v.getSpaceId())) {
-//            return false;
-//        }
-//
-//        vertexMap.remove(v.getSpaceId());
-//        return super.removeVertex(v);
-//    }
 
     public int getBoardSize() {
         return vertexSet().size();
@@ -104,10 +78,7 @@ public class CommunityBoard extends DefaultUndirectedGraph<EmblemSpace, DBZEdge>
     }
 
     public EmblemSpace getVertexByEmblem(Emblem emblem) {
-        return vertexSet().stream()
-                .filter(e -> e.getEmblem() == emblem)
-                .findFirst()
-                .orElse(null);
+        return vertexSet().stream().filter(e -> e.getEmblem() == emblem).findFirst().orElse(null);
     }
 
     public Set<EmblemSpace> getVerticesByEmblems(Set<Emblem> emblems) {
@@ -115,15 +86,10 @@ public class CommunityBoard extends DefaultUndirectedGraph<EmblemSpace, DBZEdge>
     }
 
     public Set<Emblem> getEmblemsOnBoard() {
-        return vertexSet().stream()
-                .map(EmblemSpace::getEmblem)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        return vertexSet().stream().map(EmblemSpace::getEmblem).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
-    public int getScore() {
-        populateActiveLinkBonuses();
-        calculateScore();
-        return score;
+    public void scaleVertices(double scaleFactor) {
+        vertexMap.values().forEach(e -> e.scaleCoordinates(scaleFactor));
     }
 }

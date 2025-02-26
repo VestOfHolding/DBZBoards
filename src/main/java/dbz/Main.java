@@ -1,10 +1,8 @@
 package dbz;
 
-import dbz.board.BaseBoard;
-import dbz.board.TrainingBoard;
 import dbz.domain.Emblem;
+import dbz.genetic.Chromosome;
 import dbz.genetic.GeneticAlgorithm;
-import dbz.visualize.GraphMaker;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,14 +15,10 @@ import static dbz.Utils.getEmblemsAndLinkedEmblems;
 public class Main {
 
     public static void main(String[] args) {
-        GeneticAlgorithm.go(100);
-    }
+        GeneticAlgorithm algo = new GeneticAlgorithm();
+        Chromosome bestSolution = algo.run();
 
-    private static void printSpecificBoard() {
-        BaseBoard board = new TrainingBoard();
-
-        GraphMaker graphMaker = new GraphMaker();
-        graphMaker.displayBoard(board);
+        System.out.println(bestSolution);
     }
 
     private static void printSubsetSizes() {
@@ -52,11 +46,6 @@ public class Main {
 
         emblemSubset = getEmblemsAndLinkedEmblems(linkFactory, emblems, Emblem::getAdventureBonus);
         System.out.println(emblemSubset.size());
-    }
-
-    private static void display() {
-        GraphMaker graphMaker = new GraphMaker();
-        graphMaker.display();
     }
 
     private static void printAdjacencyMatrix(LinkBonusFactory linkFactory, List<Emblem> emblems) {
@@ -92,7 +81,7 @@ public class Main {
                     .map(LinkBonus::getLinkMembers)
                     .flatMap(Collection::stream)
                     .distinct()
-                    .collect(Collectors.toList());
+                    .toList();
 
             System.out.println(String.join(" ", linkedEmblems.stream()
                             .map(Emblem::normalizeName)

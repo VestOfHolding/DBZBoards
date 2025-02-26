@@ -4,6 +4,7 @@ import dbz.board.layout.DBZEdge;
 import dbz.board.layout.EmblemSpace;
 import dbz.domain.BoardName;
 import dbz.domain.Emblem;
+import dbz.genetic.FitnessCalculator;
 import lombok.Getter;
 import org.jgrapht.graph.builder.GraphBuilder;
 
@@ -26,9 +27,12 @@ public abstract class BaseBoard {
         graphBuilder = new GraphBuilder<>(board);
 
         buildInitialGraph();
+        graphBuilder.build();
+
+        board.scaleVertices(0.8);
     }
 
     public int getScore() {
-        return board.getScore();
+        return FitnessCalculator.calculateFitness(board);
     }
 }

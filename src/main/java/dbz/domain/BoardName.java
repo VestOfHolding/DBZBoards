@@ -14,7 +14,7 @@ public enum BoardName {
     ADULT(9, 225),
     ADVENTURE(12, 300);
 
-    private int size;
+    private final int size;
 
-    private int targetScore;
+    private final int targetScore;
 }

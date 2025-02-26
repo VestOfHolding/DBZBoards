@@ -5,6 +5,9 @@ import dbz.domain.Emblem;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,7 +16,9 @@ import static dbz.domain.Emblem.*;
 public class LinkBonusFactory {
 
     @Getter
-    private Set<LinkBonus> allLinkBonuses;
+    private final Set<LinkBonus> allLinkBonuses;
+
+    private final Map<Emblem, Set<LinkBonus>> emblemToLinksMap;
 
     public LinkBonusFactory() {
         allLinkBonuses = Set.of(
@@ -158,14 +163,38 @@ public class LinkBonusFactory {
 
                 new LinkBonus(Set.of(YAMU, SPOPOVICH), 2),
 
-                new LinkBonus(Set.of(PUI_PUI, YAKON), 2)
-        );
+                new LinkBonus(Set.of(PUI_PUI, YAKON), 2),
+
+                new LinkBonus(Set.of(TRUNKS_WOHS, GOHAN_WOHS), 2),
+                new LinkBonus(Set.of(TRUNKS_WOHS, TRUNKS, TRUNKS_KID), 3),
+                new LinkBonus(Set.of(TRUNKS_WOHS, ANDROID_17, ANDROID_18), 3),
+                new LinkBonus(Set.of(TRUNKS_WOHS, VEGETA, BULMA), 3),
+
+                new LinkBonus(Set.of(GOHAN_WOHS, ANDROID_17, ANDROID_18), 3),
+                new LinkBonus(Set.of(TRUNKS_WOHS, GOKU), 2),
+
+                new LinkBonus(Set.of(BARDOCK, SHUGESH, BORGOS, TORA, FASHA), 10),
+                new LinkBonus(Set.of(BARDOCK, GOKU, RADITZ), 3),
+
+                new LinkBonus(Set.of(GRANDPA_GOHAN, GOKU), 2),
+                new LinkBonus(Set.of(GRANDPA_GOHAN, MASTER_ROSHI, OX_KING), 3),
+
+                new LinkBonus(Set.of(YOUNG_NAPPA, YOUNG_VEGETA), 2));
+
+        emblemToLinksMap = new HashMap<>();
+
+        for(LinkBonus link : allLinkBonuses) {
+            for (Emblem emblem : link.getLinkMembers()) {
+                if (!emblemToLinksMap.containsKey(emblem)) {
+                    emblemToLinksMap.put(emblem, new HashSet<>());
+                }
+                emblemToLinksMap.get(emblem).add(link);
+            }
+        }
     }
 
     public Set<LinkBonus> getLinkBonusesByEmblem(Emblem emblem) {
-        return allLinkBonuses.stream()
-                .filter(link -> link.getLinkMembers().contains(emblem))
-                .collect(Collectors.toSet());
+        return emblemToLinksMap.get(emblem);
     }
 
     public boolean doEmblemsShareLink(Emblem firstEmblem, Emblem secondEmblem) {
@@ -179,15 +208,10 @@ public class LinkBonusFactory {
                 .collect(Collectors.toSet());
     }
 
-    public Set<LinkBonus> linksContainingEmblems(Set<Emblem> emblems) {
-        return allLinkBonuses.stream()
-                .filter(link -> CollectionUtils.containsAll(link.getLinkMembers(), emblems))
-                .collect(Collectors.toSet());
-    }
-
     public Set<LinkBonus> linksContainingAnyEmblems(Set<Emblem> emblems) {
-        return allLinkBonuses.stream()
-                .filter(link -> CollectionUtils.containsAny(link.getLinkMembers(), emblems))
+        return emblems.stream()
+                .map(emblemToLinksMap::get)
+                .flatMap(Set::stream)
                 .collect(Collectors.toSet());
     }
 

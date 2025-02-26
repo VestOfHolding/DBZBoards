@@ -1,7 +1,6 @@
 package dbz.domain;
 
 import lombok.Getter;
-import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -11,7 +10,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
-@ToString
 public enum Emblem {
     GOKU(25, 8, 25, 6, 19, 12, 25, BoardName.ZWARRIOR),
     GOHAN(25, 10, 25, 12, 25, 8, 15),
@@ -95,23 +93,35 @@ public enum Emblem {
     PUI_PUI(12, 10, 25, 15, 12, 15, 12),
     YAKON(12, 10, 25, 12, 15, 12, 15),
     ANDROID_20(16, 10, 13, 25, 10, 22, 10),
-    ANDROID_19(17, 15, 1, 25, 9, 12, 15);
+    ANDROID_19(17, 15, 1, 25, 9, 12, 15),
+    TRUNKS_WOHS(25, 3, 23, 25, 23, 8, 15),
+    GOHAN_WOHS(25, 12, 29, 3, 19, 25, 15),
+    BARDOCK(25, 11, 25, 9, 11, 14, 25),
+    SHUGESH(15, 24, 15, 9, 9, 15, 18),
+    BORGOS(17, 12, 17, 12, 12, 15, 17),
+    TORA(16, 12, 16, 12, 6, 22, 22),
+    FASHA(21, 9, 15, 12, 9, 18, 21),
+    GRANDPA_GOHAN(12, 21, 15, 3, 25, 25, 9),
+    YOUNG_VEGETA(25, 25, 25, 12, 7, 12, 14),
+    YOUNG_NAPPA(16, 16, 25, 8, 10, 16, 16);
 
-    @ToString.Exclude private int zBonus;
-    @ToString.Exclude private int cookBonus;
-    @ToString.Exclude private int trainBonus;
-    @ToString.Exclude private int devBonus;
-    @ToString.Exclude private int godBonus;
-    @ToString.Exclude private int adultBonus;
-    @ToString.Exclude private int adventureBonus;
+    private final int zBonus;
+    private final int cookBonus;
+    private final int trainBonus;
+    private final int devBonus;
+    private final int godBonus;
+    private final int adultBonus;
+    private final int adventureBonus;
 
-    @ToString.Exclude
-    private Map<BoardName, Integer> bonusesByBoard;
+    private final Map<BoardName, Integer> bonusesByBoard;
 
-    @ToString.Exclude
-    private BoardName homeBoard;
+    private final BoardName homeBoard;
 
     Emblem(int zBonus, int cookBonus, int trainBonus, int devBonus, int godBonus, int adultBonus, int adventureBonus) {
+        this(zBonus, cookBonus, trainBonus, devBonus, godBonus, adultBonus, adventureBonus, null);
+    }
+
+    Emblem(int zBonus, int cookBonus, int trainBonus, int devBonus, int godBonus, int adultBonus, int adventureBonus, BoardName homeBoard) {
         this.zBonus = zBonus;
         this.cookBonus = cookBonus;
         this.trainBonus = trainBonus;
@@ -120,18 +130,8 @@ public enum Emblem {
         this.adultBonus = adultBonus;
         this.adventureBonus = adventureBonus;
 
-        bonusesByBoard = Map.of(BoardName.ZWARRIOR, zBonus,
-                BoardName.COOKING, cookBonus,
-                BoardName.TRAINING, trainBonus,
-                BoardName.DEVELOPMENT, devBonus,
-                BoardName.GODS, godBonus,
-                BoardName.ADULT, adultBonus,
-                BoardName.ADVENTURE, adventureBonus);
-    }
-
-    Emblem(int zBonus, int cookBonus, int trainBonus, int devBonus, int godBonus, int adultBonus, int adventureBonus,
-           BoardName homeBoard) {
-        this(zBonus, cookBonus, trainBonus, devBonus, godBonus, adultBonus, adventureBonus);
+        bonusesByBoard = Map.of(BoardName.ZWARRIOR, zBonus, BoardName.COOKING, cookBonus, BoardName.TRAINING, trainBonus,
+                BoardName.DEVELOPMENT, devBonus, BoardName.GODS, godBonus, BoardName.ADULT, adultBonus, BoardName.ADVENTURE, adventureBonus);
         this.homeBoard = homeBoard;
     }
 
@@ -140,10 +140,7 @@ public enum Emblem {
     }
 
     public static Emblem getCenterForBoard(BoardName board) {
-        return getAsList().stream()
-                .filter(e -> e.homeBoard == board)
-                .findFirst()
-                .orElse(null);
+        return getAsList().stream().filter(e -> e.homeBoard == board).findFirst().orElse(null);
     }
 
     public static Set<Emblem> getNonCenterEmblems() {
@@ -151,16 +148,19 @@ public enum Emblem {
     }
 
     public String normalizeName() {
-        return StringUtils.capitalize(name().toLowerCase());
+        return StringUtils.capitalize(name().replace("_", " ").toLowerCase());
     }
 
     public String fileName() {
-        return StringUtils.capitalize(name().replaceAll( "_", " ").toLowerCase())
-                .replaceAll(" ", "")
-                + "_se.png";
+        return normalizeName().replaceAll(" ", "") + "_se.png";
     }
 
     public int getBonusForBoard(BoardName boardName) {
         return bonusesByBoard.get(boardName);
+    }
+
+    @Override
+    public String toString() {
+        return name();
     }
 }
